@@ -1,41 +1,52 @@
-# Notchi
-
-> [!IMPORTANT]
-> If you're currently on Notchi `1.0.0`, please install `1.0.1` or later manually from the DMG [here](https://github.com/sk-ruban/notchi/releases/latest). The in-app updater in `1.0.0` is broken for that first upgrade, but should work thereafter.
+# Claudy
 
 A macOS notch companion that reacts to Claude Code activity in real-time.
 
-https://github.com/user-attachments/assets/e417bd40-cae8-47c0-998a-905166cf3513
+Personal fork of [sk-ruban/notchi](https://github.com/sk-ruban/notchi) — rebranded as Claudy with extra activity surfaces and Sparkle auto-update disabled so the upstream feed cannot replace this build.
 
 ## What it does
 
 - Reacts to Claude Code events in real-time (thinking, working, errors, completions)
+- Collapsed activity strip under the notch showing `verb · tool · arg · elapsed` while a session is working, compacting, or waiting
+- Bottom activity panel pinned to the bottom of the screen for a wider view of session activity
 - Analyzes conversation sentiment to show emotions (happy, sad, neutral, sob)
 - Click to expand and see session time and usage quota
 - Supports multiple concurrent Claude Code sessions with individual sprites
 - Sound effects for events (optional, auto-muted when terminal is focused)
-- Auto-updates via Sparkle
 
 ## Requirements
 
 - macOS 15.0+ (Sequoia)
 - MacBook with notch
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed
+- Xcode (for building from source — no prebuilt releases)
 
-## Install
+## Build & install
 
-1. Download `Notchi-x.x.x.dmg` from the [latest GitHub Release](https://github.com/sk-ruban/notchi/releases/latest)
-2. Open the DMG and drag Notchi to Applications
-3. Launch Notchi — it auto-installs Claude Code hooks on first launch
-4. A macOS keychain popup will appear asking to access Claude Code's cached OAuth token (used for API usage stats). Click **Always Allow** so it won't prompt again on future launches
+The repo lives in `~/Documents/Dev/Claudy`. `~/Documents` is iCloud-synced, which stamps `com.apple.FinderInfo` on build artifacts and breaks codesign. Build to `/tmp` instead:
 
-   <img src="assets/keychain-popup.png" alt="Keychain access popup" width="450">
+```sh
+cd ~/Documents/Dev/Claudy/notchi
+xcodebuild -project notchi.xcodeproj -scheme notchi -configuration Release -derivedDataPath /tmp/claudy-build
+cp -R /tmp/claudy-build/Build/Products/Release/Claudy.app /Applications/Claudy.app
+```
 
-5. *(Optional)* Click the notch to expand → open Settings → paste your Anthropic API key. This enables sentiment analysis of your prompts so the mascot reacts emotionally
+Re-sign Sparkle ad-hoc to match the app's identity (otherwise dyld rejects with "different Team IDs"):
 
-   <img src="assets/emotion-settings.png" alt="Emotion analysis settings" width="400">
+```sh
+codesign --force --deep --sign - /Applications/Claudy.app/Contents/Frameworks/Sparkle.framework
+codesign --force --deep --sign - /Applications/Claudy.app
+```
 
-6. Start using Claude Code and watch Notchi react
+Then launch:
+
+```sh
+open /Applications/Claudy.app
+```
+
+On first launch a macOS keychain popup will ask to access Claude Code's cached OAuth token (used for API usage stats). Click **Always Allow**.
+
+*(Optional)* Click the notch → Settings → paste an Anthropic API key to enable prompt-sentiment analysis.
 
 ## How it works
 
@@ -43,22 +54,21 @@ https://github.com/user-attachments/assets/e417bd40-cae8-47c0-998a-905166cf3513
 Claude Code --> Hooks (shell scripts) --> Unix Socket --> Event Parser --> State Machine --> Animated Sprites
 ```
 
-Notchi registers shell script hooks with Claude Code on launch. When Claude Code emits events (tool use, thinking, prompts, session start/end), the hook script sends JSON payloads to a Unix socket. The app parses these events, runs them through a state machine that maps to sprite animations (idle, working, sleeping, compacting, waiting), and uses the Anthropic API to analyze user prompt sentiment for emotional reactions.
+Claudy registers shell script hooks with Claude Code on launch. When Claude Code emits events (tool use, thinking, prompts, session start/end), the hook script sends JSON payloads to a Unix socket. The app parses these events, runs them through a state machine that maps to sprite animations (idle, working, sleeping, compacting, waiting), and uses the Anthropic API to analyze user prompt sentiment for emotional reactions.
 
-Each Claude Code session gets its own sprite on the grass island. Clicking expands the notch panel to show a live activity feed, session info, and API usage stats.
+Each Claude Code session gets its own sprite on the grass island. Clicking expands the notch panel to show a live activity feed, session info, and API usage stats. The collapsed strip and bottom panel surface the same activity outside of the expanded view.
 
-## Contributing
+## Project layout
 
-If you have any bugs, ideas, or would like to contribute through pull requests, please check out [Contributing to Notchi](CONTRIBUTING.md).
-
-## Community Ports
-
-- [notchi-for-windows](https://github.com/AptatoX/notchi-for-windows) by [@AptatoX](https://github.com/AptatoX), a community-made Windows port of Notchi
+- Bundle id: `com.hinevics.claudy`
+- Internal Xcode target/scheme is still `notchi`; source folder is still `notchi/` (only display name, bundle id, and `PRODUCT_NAME` were renamed to Claudy).
+- Code signing is ad-hoc (`CODE_SIGN_IDENTITY = "-"`) — no Apple Developer account needed.
 
 ## Credits
 
-- [Claude Island](https://github.com/farouqaldori/claude-island) — design inspiration for the app
-- [Readout](https://readout.org) — design inspiration for [notchi.app](https://notchi.app)
+- [notchi](https://github.com/sk-ruban/notchi) by [@sk-ruban](https://github.com/sk-ruban) — upstream this is forked from
+- [Claude Island](https://github.com/farouqaldori/claude-island) — design inspiration
+- [Readout](https://readout.org) — design inspiration
 - [Aseprite](https://www.aseprite.org/) — sprite design
 
 ## License
