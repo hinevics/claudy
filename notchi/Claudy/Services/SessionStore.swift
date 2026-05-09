@@ -151,8 +151,14 @@ final class SessionStore {
         case .stop, .subagentStop:
             session.clearPendingQuestions()
             session.updateTask(.idle)
+            if event.event == .stop {
+                // Stop is the canonical session-end signal. Dedupe is handled by
+                // SessionHistoryStore via the session id, so repeat Stop events are safe.
+                SessionHistoryStore.shared.record(session)
+            }
 
         case .sessionEnded:
+            SessionHistoryStore.shared.record(session)
             session.endSession()
             removeSession(event.sessionKey)
         }

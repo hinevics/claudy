@@ -168,6 +168,9 @@ struct ExpandedPanelView: View {
     @Binding var isActivityCollapsed: Bool
     @Binding var hoveredSessionId: String?
 
+    @State private var activityTab: ActivityTab = .sessions
+    @ObservedObject private var historyStore = SessionHistoryStore.shared
+
     init(
         sessionStore: SessionStore,
         usageService: ClaudeUsageService,
@@ -323,7 +326,10 @@ struct ExpandedPanelView: View {
                 if !showingSettings {
                     VStack(alignment: .leading, spacing: 0) {
                         ZStack {
-                            if shouldShowSessionPicker {
+                            if activityTab == .history {
+                                historyContent(geometry: geometry)
+                                    .transition(primaryContentTransition)
+                            } else if shouldShowSessionPicker {
                                 sessionPickerContent(geometry: geometry)
                                     .transition(primaryContentTransition)
                             } else {
@@ -357,6 +363,49 @@ struct ExpandedPanelView: View {
     }
 
     @ViewBuilder
+    private var activityTabPicker: some View {
+        Picker("", selection: $activityTab) {
+            Text("Sessions").tag(ActivityTab.sessions)
+            Text("History").tag(ActivityTab.history)
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .controlSize(.small)
+        .frame(maxWidth: 200)
+    }
+
+    @ViewBuilder
+    private func historyContent(geometry: GeometryProxy) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if isActivityCollapsed {
+                Spacer().allowsHitTesting(false)
+            } else {
+                Spacer()
+                    .frame(height: geometry.size.height * 0.3)
+                    .allowsHitTesting(false)
+            }
+
+            VStack(alignment: .leading, spacing: 0) {
+                if !isActivityCollapsed {
+                    HStack {
+                        activityTabPicker
+                        Spacer()
+                    }
+                    .padding(.top, 4)
+                    .padding(.bottom, 4)
+
+                    Divider().background(Color.white.opacity(0.08))
+
+                    HistoryView(store: historyStore)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    @ViewBuilder
     private func sessionPickerContent(geometry: GeometryProxy) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if isActivityCollapsed {
@@ -370,6 +419,13 @@ struct ExpandedPanelView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 if !isActivityCollapsed {
+                    HStack {
+                        activityTabPicker
+                        Spacer()
+                    }
+                    .padding(.top, 4)
+                    .padding(.bottom, 4)
+
                     Divider().background(Color.white.opacity(0.08))
 
                     SessionListView(
@@ -409,6 +465,15 @@ struct ExpandedPanelView: View {
             }
 
             VStack(alignment: .leading, spacing: 0) {
+                if !isActivityCollapsed {
+                    HStack {
+                        activityTabPicker
+                        Spacer()
+                    }
+                    .padding(.top, 4)
+                    .padding(.bottom, 4)
+                }
+
                 if hasActivity {
                     Divider().background(Color.white.opacity(0.08))
                     activitySection
