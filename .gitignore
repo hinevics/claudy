@@ -3,7 +3,9 @@
 
 # Xcode
 build/
+**/build/
 DerivedData/
+*.profraw
 *.xcuserstate
 **/*.xcworkspace/xcuserdata/
 **/*.xcodeproj/xcuserdata/
