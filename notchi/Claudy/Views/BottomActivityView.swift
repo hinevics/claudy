@@ -11,6 +11,11 @@ struct BottomActivityView: View {
     /// `BottomActivityPanel.setMouseEventsEnabled(_:)`.
     var onMouseInteractivityChange: ((Bool) -> Void)? = nil
 
+    /// Called whenever the desired panel height changes. AppDelegate resizes
+    /// the NSPanel accordingly so we never sit on a 480pt invisible window
+    /// blocking events for apps below.
+    var onContentHeightChange: ((CGFloat) -> Void)? = nil
+
     @AppStorage(BottomPanelSettingsKeys.sessionFilter)
     private var sessionFilterRaw: String = BottomPanelSettingsKeys.defaultSessionFilter.rawValue
 
@@ -116,11 +121,34 @@ struct BottomActivityView: View {
         }
         .onAppear {
             onMouseInteractivityChange?(shouldAcceptMouseEvents)
+            onContentHeightChange?(desiredPanelHeight)
+        }
+        .onChange(of: desiredPanelHeight) { _, newValue in
+            onContentHeightChange?(newValue)
         }
     }
 
     private var shouldAcceptMouseEvents: Bool {
         isHovering && !eligibleSessions.isEmpty
+    }
+
+    /// Pixel-precise height the NSPanel needs to host the current content.
+    /// Kept tight (one strip + bottom padding) by default so the transparent
+    /// panel doesn't cover the bottom of the screen and swallow events.
+    private var desiredPanelHeight: CGFloat {
+        let count = eligibleSessions.count
+        guard count > 0 else { return 4 }
+        let stripHeight: CGFloat = 46
+        let spacing: CGFloat = 6
+        let bottomPadding: CGFloat = 12
+        let useAggregate = count >= 2 && !isHovering
+        if useAggregate || count == 1 {
+            return stripHeight + bottomPadding
+        }
+        let cap = max(BottomPanelSettingsKeys.rowLimitRange.lowerBound,
+                      min(rowLimit, BottomPanelSettingsKeys.rowLimitRange.upperBound))
+        let visible = min(count, cap)
+        return CGFloat(visible) * stripHeight + CGFloat(max(visible - 1, 0)) * spacing + bottomPadding
     }
 
     @ViewBuilder

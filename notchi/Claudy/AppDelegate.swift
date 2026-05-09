@@ -12,10 +12,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
     private var bottomActivityVisibilityCoordinator: BottomActivityVisibilityCoordinator?
     private var bottomEdgeHoverMonitor: BottomEdgeHoverMonitor?
     private let windowHeight: CGFloat = 500
-    // WHY: panel must be tall enough to host fully-expanded session list
-    // (rowLimit up to ~10 rows * ~42pt). Bottom edge stays pinned at screen
-    // visibleFrame.minY; SwiftUI content is bottom-aligned via a Spacer.
-    private let bottomActivityHeight: CGFloat = 480
+    // Initial height before SwiftUI reports its content size. Real height is
+    // driven by BottomActivityView.onContentHeightChange so the transparent
+    // panel never grows past what's actually visible — otherwise it sits over
+    // the bottom half of the screen and swallows clicks for apps below.
+    private let bottomActivityHeight: CGFloat = 60
     private let integrationCoordinator = IntegrationCoordinator.shared
 
     private var updaterStarted = false
@@ -136,12 +137,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
         let panel = BottomActivityPanel(frame: bottomActivityFrame(for: screen))
 
         let hoverMonitor = BottomEdgeHoverMonitor()
-        let rootView = BottomActivityView(onMouseInteractivityChange: { [weak panel] enabled in
-            // Flip pass-through only on hover-state transitions. Default
-            // (and post-hover) MUST be pass-through, otherwise the
-            // transparent 480pt panel silently blocks clicks on apps below.
-            panel?.setMouseEventsEnabled(enabled)
-        }).environmentObject(hoverMonitor)
+        let rootView = BottomActivityView(
+            onMouseInteractivityChange: { [weak panel] enabled in
+                // Flip pass-through only on hover-state transitions. Default
+                // (and post-hover) MUST be pass-through.
+                panel?.setMouseEventsEnabled(enabled)
+            },
+            onContentHeightChange: { [weak self] height in
+                self?.resizeBottomActivityPanel(toHeight: height)
+            }
+        ).environmentObject(hoverMonitor)
         let hosting = NSHostingView(rootView: rootView)
         hosting.translatesAutoresizingMaskIntoConstraints = false
 
@@ -168,6 +173,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
             self?.bottomActivityPanel?.screen ?? ScreenSelector.shared.selectedScreen
         }
         self.bottomEdgeHoverMonitor = hoverMonitor
+    }
+
+    @MainActor private func resizeBottomActivityPanel(toHeight height: CGFloat) {
+        guard let panel = bottomActivityPanel else { return }
+        let screen = panel.screen ?? ScreenSelector.shared.selectedScreen
+        guard let visible = screen?.visibleFrame else { return }
+        let clamped = max(4, min(height, 480))
+        let frame = NSRect(
+            x: visible.origin.x,
+            y: visible.origin.y,
+            width: visible.width,
+            height: clamped
+        )
+        if panel.frame != frame {
+            panel.setFrame(frame, display: true)
+        }
     }
 
     private func bottomActivityFrame(for screen: NSScreen) -> NSRect {
