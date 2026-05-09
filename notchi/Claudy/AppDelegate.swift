@@ -193,18 +193,54 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
     @MainActor private func resizeBottomActivityPanel(toHeight height: CGFloat) {
         guard let panel = bottomActivityPanel else { return }
         let screen = panel.screen ?? ScreenSelector.shared.selectedScreen
-        guard let visible = screen?.visibleFrame else { return }
+        guard let screen, let visible = screen.visibleFrame as NSRect? else { return }
         let clamped = max(4, min(height, 480))
         let width = bottomActivityStripWidth
+        // visibleFrame doesn't reflect an auto-hide Dock that's transiently
+        // revealed, so it would let us sit on top of the Dock. Query the
+        // Dock window directly and clamp our y above it.
+        let bottomY = max(visible.origin.y, dockTopY(for: screen))
         let frame = NSRect(
             x: visible.midX - width / 2,
-            y: visible.origin.y,
+            y: bottomY,
             width: width,
             height: clamped
         )
         if panel.frame != frame {
             panel.setFrame(frame, display: true)
         }
+    }
+
+    /// Returns the y coordinate (in NSScreen / bottom-left coords) above
+    /// which the bottom panel should sit so it never overlaps the Dock —
+    /// including the auto-hide Dock when it's transiently visible.
+    @MainActor private func dockTopY(for screen: NSScreen) -> CGFloat {
+        let opts: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
+        guard
+            let list = CGWindowListCopyWindowInfo(opts, kCGNullWindowID) as? [[String: Any]]
+        else {
+            return screen.visibleFrame.minY
+        }
+        let screenHeight = screen.frame.height
+        var bestTop: CGFloat = screen.visibleFrame.minY
+        for info in list {
+            guard info[kCGWindowOwnerName as String] as? String == "Dock" else { continue }
+            guard
+                let bounds = info[kCGWindowBounds as String] as? [String: CGFloat],
+                let cgY = bounds["Y"], let cgH = bounds["Height"], let cgX = bounds["X"]
+            else { continue }
+            // Skip the menu-bar-anchored Dock helpers; only consider the dock
+            // sitting at the screen bottom (CG y starts from top of screen).
+            let dockBottomFromTop = cgY + cgH
+            let isAtBottom = dockBottomFromTop >= screenHeight - 1
+            guard isAtBottom else { continue }
+            // Filter out tiny tooltip / menu windows that report ownerName Dock.
+            guard cgH >= 8, cgX <= 1 else { continue }
+            // y of Dock's TOP edge in NSScreen coords (bottom-left origin).
+            let nsTopOfDock = screenHeight - cgY
+            if nsTopOfDock > bestTop { bestTop = nsTopOfDock }
+        }
+        return bestTop
     }
 
     private func bottomActivityFrame(for screen: NSScreen) -> NSRect {
