@@ -103,8 +103,8 @@ struct BottomActivityView: View {
         }
         .opacity(opacity)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .animation(.easeOut(duration: 0.18), value: useAggregate)
-        .animation(.easeOut(duration: 0.18), value: sessions.map(\.id))
+        .animation(.smooth(duration: 0.32), value: useAggregate)
+        .animation(.smooth(duration: 0.32), value: sessions.map(\.id))
         // Drive panel pass-through. Interactive only while the hot-zone is
         // hovered AND there is at least one strip to click. When the stack
         // collapses (no sessions, or hover-out) we MUST flip back to
