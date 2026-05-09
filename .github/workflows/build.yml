@@ -1,0 +1,92 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build
+    runs-on: macos-15
+    timeout-minutes: 30
+    # Pin to the same Xcode the test workflow uses for consistency.
+    # (Letting the runner default works too, but pinning avoids surprises
+    # when GitHub rotates the default Xcode on macos-15 images.)
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: |
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR"
+          xcodebuild -version
+          xcrun swift --version
+
+      - name: Cache SwiftPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: build/SourcePackages
+          key: ${{ runner.os }}-spm-${{ hashFiles('notchi/Claudy.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Build Release
+        shell: bash
+        run: |
+          set -o pipefail
+          # xcpretty isn't guaranteed on the runner; pipe through it if available,
+          # otherwise emit raw xcodebuild output. pipefail ensures we capture
+          # xcodebuild's exit code, not xcpretty's.
+          if command -v xcpretty >/dev/null 2>&1; then
+            xcodebuild \
+              -project notchi/Claudy.xcodeproj \
+              -scheme Claudy \
+              -configuration Release \
+              -derivedDataPath build \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGN_IDENTITY=- \
+              | xcpretty
+          else
+            xcodebuild \
+              -project notchi/Claudy.xcodeproj \
+              -scheme Claudy \
+              -configuration Release \
+              -derivedDataPath build \
+              CODE_SIGNING_REQUIRED=NO \
+              CODE_SIGN_IDENTITY=-
+          fi
+
+      - name: Re-sign Sparkle.framework and Claudy.app (ad-hoc)
+        run: |
+          codesign --force --deep --sign - build/Build/Products/Release/Claudy.app/Contents/Frameworks/Sparkle.framework
+          codesign --force --deep --sign - build/Build/Products/Release/Claudy.app
+
+      - name: Verify code signature
+        run: |
+          codesign -dv --verbose=2 build/Build/Products/Release/Claudy.app || true
+
+      - name: Zip Claudy.app (ditto preserves xattrs/resource forks)
+        run: |
+          ditto -c -k --keepParent \
+            build/Build/Products/Release/Claudy.app \
+            Claudy.app.zip
+
+      - name: Upload Claudy.app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Claudy.app
+          path: Claudy.app.zip
+          retention-days: 30
+
+# Note: a separate test job is intentionally not added here; tests already run
+# via .github/workflows/test.yml on push/PR to main.
