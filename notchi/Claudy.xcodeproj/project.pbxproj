@@ -16,19 +16,19 @@
 			containerPortal = 47C9227A2F2CFA1F00EA1E18 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 47C922812F2CFA1F00EA1E18;
-			remoteInfo = notchi;
+			remoteInfo = Claudy;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		47C922822F2CFA1F00EA1E18 /* notchi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = notchi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		47C922822F2CFA1F00EA1E18 /* Claudy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Claudy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A11A00022F50000000EA1E18 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		47C922842F2CFA1F00EA1E18 /* notchi */ = {
+		47C922842F2CFA1F00EA1E18 /* Claudy */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = notchi;
+			path = Claudy;
 			sourceTree = "<group>";
 		};
 		A11A00012F50000000EA1E18 /* Tests */ = {
@@ -60,7 +60,7 @@
 		47C922792F2CFA1F00EA1E18 = {
 			isa = PBXGroup;
 			children = (
-				47C922842F2CFA1F00EA1E18 /* notchi */,
+				47C922842F2CFA1F00EA1E18 /* Claudy */,
 				A11A00012F50000000EA1E18 /* Tests */,
 				47C922832F2CFA1F00EA1E18 /* Products */,
 			);
@@ -69,7 +69,7 @@
 		47C922832F2CFA1F00EA1E18 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				47C922822F2CFA1F00EA1E18 /* notchi.app */,
+				47C922822F2CFA1F00EA1E18 /* Claudy.app */,
 				A11A00022F50000000EA1E18 /* Tests.xctest */,
 			);
 			name = Products;
@@ -78,9 +78,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		47C922812F2CFA1F00EA1E18 /* notchi */ = {
+		47C922812F2CFA1F00EA1E18 /* Claudy */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 47C9228D2F2CFA2000EA1E18 /* Build configuration list for PBXNativeTarget "notchi" */;
+			buildConfigurationList = 47C9228D2F2CFA2000EA1E18 /* Build configuration list for PBXNativeTarget "Claudy" */;
 			buildPhases = (
 				47C9227E2F2CFA1F00EA1E18 /* Sources */,
 				47C9227F2F2CFA1F00EA1E18 /* Frameworks */,
@@ -91,14 +91,14 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				47C922842F2CFA1F00EA1E18 /* notchi */,
+				47C922842F2CFA1F00EA1E18 /* Claudy */,
 			);
-			name = notchi;
+			name = Claudy;
 			packageProductDependencies = (
 				47C923A12F2CFA1F00EA1E18 /* Sparkle */,
 			);
-			productName = notchi;
-			productReference = 47C922822F2CFA1F00EA1E18 /* notchi.app */;
+			productName = Claudy;
+			productReference = 47C922822F2CFA1F00EA1E18 /* Claudy.app */;
 			productType = "com.apple.product-type.application";
 		};
 		A11A00032F50000000EA1E18 /* Tests */ = {
@@ -143,7 +143,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 47C9227D2F2CFA1F00EA1E18 /* Build configuration list for PBXProject "notchi" */;
+			buildConfigurationList = 47C9227D2F2CFA1F00EA1E18 /* Build configuration list for PBXProject "Claudy" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -160,7 +160,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				47C922812F2CFA1F00EA1E18 /* notchi */,
+				47C922812F2CFA1F00EA1E18 /* Claudy */,
 				A11A00032F50000000EA1E18 /* Tests */,
 			);
 		};
@@ -203,7 +203,7 @@
 /* Begin PBXTargetDependency section */
 		A11A00082F50000000EA1E18 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 47C922812F2CFA1F00EA1E18 /* notchi */;
+			target = 47C922812F2CFA1F00EA1E18 /* Claudy */;
 			targetProxy = A11A00072F50000000EA1E18 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -340,7 +340,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = notchi/notchi.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Claudy/Claudy.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 6;
@@ -377,7 +377,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = notchi/notchi.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Claudy/Claudy.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 6;
@@ -432,8 +432,8 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/notchi.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/notchi";
-				TEST_TARGET_NAME = notchi;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Claudy.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Claudy";
+				TEST_TARGET_NAME = Claudy;
 			};
 			name = Debug;
 		};
@@ -460,15 +460,15 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/notchi.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/notchi";
-				TEST_TARGET_NAME = notchi;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Claudy.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Claudy";
+				TEST_TARGET_NAME = Claudy;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		47C9227D2F2CFA1F00EA1E18 /* Build configuration list for PBXProject "notchi" */ = {
+		47C9227D2F2CFA1F00EA1E18 /* Build configuration list for PBXProject "Claudy" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				47C9228B2F2CFA2000EA1E18 /* Debug */,
@@ -477,7 +477,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		47C9228D2F2CFA2000EA1E18 /* Build configuration list for PBXNativeTarget "notchi" */ = {
+		47C9228D2F2CFA2000EA1E18 /* Build configuration list for PBXNativeTarget "Claudy" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				47C9228E2F2CFA2000EA1E18 /* Debug */,

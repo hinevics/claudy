@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "47C922812F2CFA1F00EA1E18"
-               BuildableName = "notchi.app"
-               BlueprintName = "notchi"
-               ReferencedContainer = "container:notchi.xcodeproj">
+               BuildableName = "Claudy.app"
+               BlueprintName = "Claudy"
+               ReferencedContainer = "container:Claudy.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -38,7 +38,7 @@
                BlueprintIdentifier = "A11A00032F50000000EA1E18"
                BuildableName = "Tests.xctest"
                BlueprintName = "Tests"
-               ReferencedContainer = "container:notchi.xcodeproj">
+               ReferencedContainer = "container:Claudy.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -58,9 +58,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "47C922812F2CFA1F00EA1E18"
-            BuildableName = "notchi.app"
-            BlueprintName = "notchi"
-            ReferencedContainer = "container:notchi.xcodeproj">
+            BuildableName = "Claudy.app"
+            BlueprintName = "Claudy"
+            ReferencedContainer = "container:Claudy.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -75,9 +75,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "47C922812F2CFA1F00EA1E18"
-            BuildableName = "notchi.app"
-            BlueprintName = "notchi"
-            ReferencedContainer = "container:notchi.xcodeproj">
+            BuildableName = "Claudy.app"
+            BlueprintName = "Claudy"
+            ReferencedContainer = "container:Claudy.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

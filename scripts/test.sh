@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_PATH="notchi/notchi.xcodeproj"
-SCHEME="notchi"
+PROJECT_PATH="notchi/Claudy.xcodeproj"
+SCHEME="Claudy"
 DESTINATION="platform=macOS"
 
 BUILD_ROOT="build/test"
