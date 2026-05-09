@@ -68,27 +68,35 @@ struct BottomActivityView: View {
         let useAggregate = sessions.count >= 2 && !isHovering
 
         return VStack(spacing: 6) {
-            Spacer()
-            content(sessions: sessions, useAggregate: useAggregate)
+            Spacer(minLength: 0)
+            ZStack(alignment: .bottom) {
+                if useAggregate {
+                    AggregateActivityStrip(sessions: sessions)
+                        .frame(width: 360)
+                        .transition(.asymmetric(
+                            insertion: .opacity.animation(.easeInOut(duration: 0.18).delay(0.05)),
+                            removal: .opacity.animation(.easeInOut(duration: 0.12))
+                        ))
+                } else if !sessions.isEmpty {
+                    expandedStack(sessions: sessions)
+                        .scaleEffect(isHovering ? 1.0 : 0.92, anchor: .bottom)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .bottom)
+                                .combined(with: .opacity)
+                                .combined(with: .scale(scale: 0.92, anchor: .bottom)),
+                            removal: .move(edge: .bottom)
+                                .combined(with: .opacity)
+                        ))
+                }
+            }
             if !sessions.isEmpty {
                 Spacer().frame(height: 12)
             }
         }
         .opacity(opacity)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .animation(.easeInOut(duration: 0.18), value: useAggregate)
+        .animation(.spring(response: 0.32, dampingFraction: 0.78), value: useAggregate)
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: sessions.map(\.id))
-    }
-
-    @ViewBuilder
-    private func content(sessions: [SessionData], useAggregate: Bool) -> some View {
-        if useAggregate {
-            AggregateActivityStrip(sessions: sessions)
-                .frame(width: 360)
-                .transition(.opacity)
-        } else {
-            expandedStack(sessions: sessions)
-        }
     }
 
     @ViewBuilder
@@ -98,12 +106,6 @@ struct BottomActivityView: View {
             ForEach(expandedSessions, id: \.id) { session in
                 CollapsedActivityStrip(session: session)
                     .frame(width: stripWidth)
-                    .transition(
-                        .asymmetric(
-                            insertion: .move(edge: .bottom).combined(with: .opacity),
-                            removal: .opacity
-                        )
-                    )
             }
         }
     }

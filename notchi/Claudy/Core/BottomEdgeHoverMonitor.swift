@@ -22,7 +22,7 @@ final class BottomEdgeHoverMonitor: ObservableObject {
 
     /// Debounce window for hover-out — prevents flicker when the cursor
     /// momentarily overshoots strip gaps.
-    private let collapseDelayNanos: UInt64 = 200_000_000
+    private let collapseDelayNanos: UInt64 = 100_000_000
 
     private var resolveScreen: (() -> NSScreen?)?
     private var globalMonitor: Any?
