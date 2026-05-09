@@ -20,6 +20,13 @@ final class BottomEdgeHoverMonitor: ObservableObject {
     /// mouse travel near the Dock area.
     private let hotZoneHeight: CGFloat = 100
 
+    /// Hot zone half-width centered on the screen. Strip itself is 360pt;
+    /// add ~60pt of affordance on each side so users don't have to aim
+    /// precisely. Anywhere outside this window does NOT trigger reveal,
+    /// so cursor near the screen corners (screenshots, other apps) is
+    /// untouched.
+    private let hotZoneHalfWidth: CGFloat = 240
+
     /// Debounce window for hover-out — prevents flicker when the cursor
     /// momentarily overshoots strip gaps.
     private let collapseDelayNanos: UInt64 = 100_000_000
@@ -82,7 +89,7 @@ final class BottomEdgeHoverMonitor: ObservableObject {
         let location = NSEvent.mouseLocation
         let visible = screen.visibleFrame
 
-        let inHorizontalRange = location.x >= visible.minX && location.x <= visible.maxX
+        let inHorizontalRange = abs(location.x - visible.midX) <= hotZoneHalfWidth
         let inHotZone = location.y >= visible.minY
             && location.y <= visible.minY + hotZoneHeight
 
