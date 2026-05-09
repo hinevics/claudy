@@ -93,6 +93,7 @@ final class BottomEdgeHoverMonitor: ObservableObject {
             collapseTask = nil
             if !isHovering {
                 isHovering = true
+                HapticService.shared.playHoverClick()
             }
         } else if isHovering {
             collapseTask?.cancel()
