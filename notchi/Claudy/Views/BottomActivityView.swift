@@ -88,18 +88,12 @@ struct BottomActivityView: View {
                 if useAggregate {
                     AggregateActivityStrip(sessions: sessions)
                         .frame(width: 360)
-                        .transition(.asymmetric(
-                            insertion: .opacity.animation(.easeInOut(duration: 0.18).delay(0.05)),
-                            removal: .opacity.animation(.easeInOut(duration: 0.12))
-                        ))
+                        .transition(.opacity)
                 } else if !sessions.isEmpty {
                     let multiSession = sessions.count >= 2
                     expandedStack(sessions: sessions)
                         .transition(multiSession
-                            ? .asymmetric(
-                                insertion: .move(edge: .bottom).combined(with: .opacity),
-                                removal: .move(edge: .bottom).combined(with: .opacity)
-                              )
+                            ? .move(edge: .bottom).combined(with: .opacity)
                             : .identity)
                 }
             }
@@ -109,8 +103,8 @@ struct BottomActivityView: View {
         }
         .opacity(opacity)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .animation(.spring(response: 0.32, dampingFraction: 0.78), value: useAggregate)
-        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: sessions.map(\.id))
+        .animation(.easeOut(duration: 0.18), value: useAggregate)
+        .animation(.easeOut(duration: 0.18), value: sessions.map(\.id))
         // Drive panel pass-through. Interactive only while the hot-zone is
         // hovered AND there is at least one strip to click. When the stack
         // collapses (no sessions, or hover-out) we MUST flip back to
