@@ -14,8 +14,13 @@ struct BottomActivityView: View {
     @AppStorage(BottomPanelSettingsKeys.opacity)
     private var opacity: Double = BottomPanelSettingsKeys.defaultOpacity
 
-    @State private var isHovering: Bool = false
-    @State private var collapseTask: Task<Void, Never>?
+    /// Hover signal driven by BottomEdgeHoverMonitor (global mouse position
+    /// near screen bottom edge). Replaces the previous SwiftUI .onHover
+    /// plumbing — the panel is now ignoresMouseEvents=true and much taller,
+    /// so SwiftUI hover wouldn't fire reliably anyway.
+    @EnvironmentObject private var hoverMonitor: BottomEdgeHoverMonitor
+
+    private var isHovering: Bool { hoverMonitor.isHovering }
 
     private var sessionFilter: BottomPanelSessionFilter {
         BottomPanelSessionFilter(rawValue: sessionFilterRaw) ?? BottomPanelSettingsKeys.defaultSessionFilter
@@ -73,9 +78,6 @@ struct BottomActivityView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.18), value: useAggregate)
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: sessions.map(\.id))
-        .onChange(of: sessions.count) { _, newCount in
-            if newCount < 2 { isHovering = false }
-        }
     }
 
     @ViewBuilder
@@ -83,7 +85,6 @@ struct BottomActivityView: View {
         if useAggregate {
             AggregateActivityStrip(sessions: sessions)
                 .frame(width: 360)
-                .onHover(perform: handleHover)
                 .transition(.opacity)
         } else {
             expandedStack(sessions: sessions)
@@ -103,29 +104,6 @@ struct BottomActivityView: View {
                             removal: .opacity
                         )
                     )
-            }
-        }
-        // WHY: while expanded for 2+ sessions, keep tracking hover so we can collapse
-        // back when the cursor leaves the whole stack (with a small grace period).
-        .onHover { hovering in
-            if sessions.count >= 2 {
-                handleHover(hovering)
-            }
-        }
-    }
-
-    private func handleHover(_ hovering: Bool) {
-        if hovering {
-            collapseTask?.cancel()
-            collapseTask = nil
-            if !isHovering { isHovering = true }
-        } else {
-            // WHY: brief overshoots crossing strip gaps shouldn't collapse the stack.
-            collapseTask?.cancel()
-            collapseTask = Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 200_000_000)
-                if Task.isCancelled { return }
-                isHovering = false
             }
         }
     }

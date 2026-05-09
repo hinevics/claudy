@@ -10,8 +10,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
     private var notchPanel: NotchPanel?
     private var bottomActivityPanel: BottomActivityPanel?
     private var bottomActivityVisibilityCoordinator: BottomActivityVisibilityCoordinator?
+    private var bottomEdgeHoverMonitor: BottomEdgeHoverMonitor?
     private let windowHeight: CGFloat = 500
-    private let bottomActivityHeight: CGFloat = 80
+    // WHY: panel must be tall enough to host fully-expanded session list
+    // (rowLimit up to ~10 rows * ~42pt). Bottom edge stays pinned at screen
+    // visibleFrame.minY; SwiftUI content is bottom-aligned via a Spacer.
+    private let bottomActivityHeight: CGFloat = 480
     private let integrationCoordinator = IntegrationCoordinator.shared
 
     private var updaterStarted = false
@@ -66,6 +70,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
     func applicationWillTerminate(_ notification: Notification) {
         integrationCoordinator.stop()
         ClaudeUsageService.shared.stopPolling()
+        bottomEdgeHoverMonitor?.stop()
+        bottomActivityVisibilityCoordinator?.stop()
     }
 
     @MainActor private func setupNotchWindow() {
@@ -128,7 +134,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
     @MainActor private func setupBottomActivityWindow() {
         guard let screen = ScreenSelector.shared.selectedScreen else { return }
         let panel = BottomActivityPanel(frame: bottomActivityFrame(for: screen))
-        let hosting = NSHostingView(rootView: BottomActivityView())
+
+        let hoverMonitor = BottomEdgeHoverMonitor()
+        let hosting = NSHostingView(rootView: BottomActivityView().environmentObject(hoverMonitor))
         hosting.translatesAutoresizingMaskIntoConstraints = false
 
         let container = NSView()
@@ -149,6 +157,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
         }
         coordinator.start()
         self.bottomActivityVisibilityCoordinator = coordinator
+
+        hoverMonitor.start { [weak self] in
+            self?.bottomActivityPanel?.screen ?? ScreenSelector.shared.selectedScreen
+        }
+        self.bottomEdgeHoverMonitor = hoverMonitor
     }
 
     private func bottomActivityFrame(for screen: NSScreen) -> NSRect {
