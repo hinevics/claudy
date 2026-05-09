@@ -15,32 +15,24 @@ import Combine
 final class BottomEdgeHoverMonitor: ObservableObject {
     @Published private(set) var isHovering: Bool = false
 
-    /// Hot zone height in points above the screen's visibleFrame bottom.
-    /// Tight — user has to bring the cursor right to the screen edge so
-    /// incidental travel near the Dock or app windows doesn't fire reveal.
-    private let hotZoneHeight: CGFloat = 30
-
-    /// Hot zone half-width centered on the screen. Strip itself is 360pt;
-    /// add ~60pt of affordance on each side so users don't have to aim
-    /// precisely. Anywhere outside this window does NOT trigger reveal,
-    /// so cursor near the screen corners (screenshots, other apps) is
-    /// untouched.
-    private let hotZoneHalfWidth: CGFloat = 240
-
     /// Debounce window for hover-out — prevents flicker when the cursor
     /// momentarily overshoots strip gaps.
     private let collapseDelayNanos: UInt64 = 100_000_000
 
-    private var resolveScreen: (() -> NSScreen?)?
+    /// Resolver returning the panel's CURRENT frame (the visible strip area
+    /// in screen coordinates). Hover is true while the cursor is inside
+    /// that rectangle — so the trigger area is always exactly what the user
+    /// can see, regardless of where the panel sits or how tall it is.
+    private var resolvePanelFrame: (() -> NSRect?)?
     private var globalMonitor: Any?
     private var localMonitor: Any?
     private var collapseTask: Task<Void, Never>?
     private var isStarted = false
 
-    func start(resolveScreen: @escaping () -> NSScreen?) {
+    func start(resolvePanelFrame: @escaping () -> NSRect?) {
         guard !isStarted else { return }
         isStarted = true
-        self.resolveScreen = resolveScreen
+        self.resolvePanelFrame = resolvePanelFrame
 
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { [weak self] _ in
             // Global monitors deliver events on the main thread already, but
@@ -71,7 +63,7 @@ final class BottomEdgeHoverMonitor: ObservableObject {
         localMonitor = nil
         collapseTask?.cancel()
         collapseTask = nil
-        resolveScreen = nil
+        resolvePanelFrame = nil
         isStarted = false
     }
 
@@ -85,15 +77,10 @@ final class BottomEdgeHoverMonitor: ObservableObject {
     }
 
     private func evaluate() {
-        guard let screen = resolveScreen?() else { return }
+        guard let frame = resolvePanelFrame?() else { return }
         let location = NSEvent.mouseLocation
-        let visible = screen.visibleFrame
 
-        let inHorizontalRange = abs(location.x - visible.midX) <= hotZoneHalfWidth
-        let inHotZone = location.y >= visible.minY
-            && location.y <= visible.minY + hotZoneHeight
-
-        let shouldHover = inHorizontalRange && inHotZone
+        let shouldHover = frame.contains(location)
 
         if shouldHover {
             collapseTask?.cancel()

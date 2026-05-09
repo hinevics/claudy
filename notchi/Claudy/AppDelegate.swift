@@ -170,7 +170,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
         self.bottomActivityVisibilityCoordinator = coordinator
 
         hoverMonitor.start { [weak self] in
-            self?.bottomActivityPanel?.screen ?? ScreenSelector.shared.selectedScreen
+            self?.bottomActivityPanel?.frame
         }
         self.bottomEdgeHoverMonitor = hoverMonitor
     }
