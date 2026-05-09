@@ -124,17 +124,17 @@ struct CollapsedActivityStrip: View {
             }
         }
         .onTapGesture {
-            SessionStripActions.openInFinder(cwd: session.cwd)
+            SessionStripActions.revealInNotch(sessionID: session.id)
         }
         .contextMenu {
-            Button("Open in Finder") {
-                SessionStripActions.openInFinder(cwd: session.cwd)
+            Button("Reveal in Notch") {
+                SessionStripActions.revealInNotch(sessionID: session.id)
             }
             Button("Open in Ghostty") {
                 SessionStripActions.openInGhostty(cwd: session.cwd)
             }
-            Button("Reveal in Notch") {
-                SessionStripActions.revealInNotch(sessionID: session.id)
+            Button("Open in Finder") {
+                SessionStripActions.openInFinder(cwd: session.cwd)
             }
         }
         .onReceive(tick) { now = $0 }
