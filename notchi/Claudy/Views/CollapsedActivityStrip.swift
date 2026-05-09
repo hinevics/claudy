@@ -7,6 +7,7 @@ struct CollapsedActivityStrip: View {
     let session: SessionData
 
     @State private var now: Date = Date()
+    @State private var isHoveringRow: Bool = false
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private var runningEvent: SessionEvent? {
@@ -103,13 +104,39 @@ struct CollapsedActivityStrip: View {
         .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.black.opacity(0.92))
+                .fill(Color.black.opacity(isHoveringRow ? 0.96 : 0.92))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 0.5)
+                .stroke(
+                    Color.white.opacity(isHoveringRow ? 0.22 : 0.08),
+                    lineWidth: isHoveringRow ? 0.75 : 0.5
+                )
         )
         .shadow(color: .black.opacity(0.5), radius: 6, y: 2)
+        .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .onHover { hovering in
+            isHoveringRow = hovering
+            if hovering {
+                NSCursor.pointingHand.set()
+            } else {
+                NSCursor.arrow.set()
+            }
+        }
+        .onTapGesture {
+            SessionStripActions.openInFinder(cwd: session.cwd)
+        }
+        .contextMenu {
+            Button("Open in Finder") {
+                SessionStripActions.openInFinder(cwd: session.cwd)
+            }
+            Button("Open in Ghostty") {
+                SessionStripActions.openInGhostty(cwd: session.cwd)
+            }
+            Button("Reveal in Notch") {
+                SessionStripActions.revealInNotch(sessionID: session.id)
+            }
+        }
         .onReceive(tick) { now = $0 }
     }
 

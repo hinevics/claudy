@@ -136,7 +136,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
         let panel = BottomActivityPanel(frame: bottomActivityFrame(for: screen))
 
         let hoverMonitor = BottomEdgeHoverMonitor()
-        let hosting = NSHostingView(rootView: BottomActivityView().environmentObject(hoverMonitor))
+        let rootView = BottomActivityView(onMouseInteractivityChange: { [weak panel] enabled in
+            // Flip pass-through only on hover-state transitions. Default
+            // (and post-hover) MUST be pass-through, otherwise the
+            // transparent 480pt panel silently blocks clicks on apps below.
+            panel?.setMouseEventsEnabled(enabled)
+        }).environmentObject(hoverMonitor)
+        let hosting = NSHostingView(rootView: rootView)
         hosting.translatesAutoresizingMaskIntoConstraints = false
 
         let container = NSView()

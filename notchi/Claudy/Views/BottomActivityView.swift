@@ -5,6 +5,12 @@ import SwiftUI
 struct BottomActivityView: View {
     var stateMachine: NotchiStateMachine = .shared
 
+    /// Called whenever the panel should switch between pass-through (false)
+    /// and click-accepting (true). Driven by the hover monitor combined with
+    /// whether any strips are currently rendered. AppDelegate wires this to
+    /// `BottomActivityPanel.setMouseEventsEnabled(_:)`.
+    var onMouseInteractivityChange: ((Bool) -> Void)? = nil
+
     @AppStorage(BottomPanelSettingsKeys.sessionFilter)
     private var sessionFilterRaw: String = BottomPanelSettingsKeys.defaultSessionFilter.rawValue
 
@@ -100,6 +106,21 @@ struct BottomActivityView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.spring(response: 0.32, dampingFraction: 0.78), value: useAggregate)
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: sessions.map(\.id))
+        // Drive panel pass-through. Interactive only while the hot-zone is
+        // hovered AND there is at least one strip to click. When the stack
+        // collapses (no sessions, or hover-out) we MUST flip back to
+        // pass-through so the transparent 480pt panel doesn't swallow clicks
+        // for apps below.
+        .onChange(of: shouldAcceptMouseEvents) { _, newValue in
+            onMouseInteractivityChange?(newValue)
+        }
+        .onAppear {
+            onMouseInteractivityChange?(shouldAcceptMouseEvents)
+        }
+    }
+
+    private var shouldAcceptMouseEvents: Bool {
+        isHovering && !eligibleSessions.isEmpty
     }
 
     @ViewBuilder
