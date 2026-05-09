@@ -16,9 +16,9 @@ final class BottomEdgeHoverMonitor: ObservableObject {
     @Published private(set) var isHovering: Bool = false
 
     /// Hot zone height in points above the screen's visibleFrame bottom.
-    /// 100pt is enough to feel responsive without firing on incidental
-    /// mouse travel near the Dock area.
-    private let hotZoneHeight: CGFloat = 100
+    /// Tight — user has to bring the cursor right to the screen edge so
+    /// incidental travel near the Dock or app windows doesn't fire reveal.
+    private let hotZoneHeight: CGFloat = 30
 
     /// Hot zone half-width centered on the screen. Strip itself is 360pt;
     /// add ~60pt of affordance on each side so users don't have to aim
