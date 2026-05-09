@@ -364,14 +364,34 @@ struct ExpandedPanelView: View {
 
     @ViewBuilder
     private var activityTabPicker: some View {
-        Picker("", selection: $activityTab) {
-            Text("Sessions").tag(ActivityTab.sessions)
-            Text("History").tag(ActivityTab.history)
+        HStack(spacing: 4) {
+            tabButton(label: "Sessions", tab: .sessions)
+            tabButton(label: "History",  tab: .history)
         }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .controlSize(.small)
-        .frame(maxWidth: 200)
+        .padding(3)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.white.opacity(0.06))
+        )
+    }
+
+    @ViewBuilder
+    private func tabButton(label: String, tab: ActivityTab) -> some View {
+        let isActive = activityTab == tab
+        Button {
+            activityTab = tab
+        } label: {
+            Text(label)
+                .font(.system(size: 11, weight: isActive ? .semibold : .regular))
+                .foregroundStyle(isActive ? Color.white : Color.white.opacity(0.55))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(isActive ? Color.white.opacity(0.14) : Color.clear)
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
