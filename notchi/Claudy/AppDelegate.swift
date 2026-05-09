@@ -175,15 +175,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
         self.bottomEdgeHoverMonitor = hoverMonitor
     }
 
+    /// Width of the activity strip in points. Panel matches this so it never
+    /// covers more horizontal area than the visible strip — clicks outside
+    /// the strip pass through to apps below even while the panel is
+    /// click-accepting during hover.
+    private let bottomActivityStripWidth: CGFloat = 360
+
     @MainActor private func resizeBottomActivityPanel(toHeight height: CGFloat) {
         guard let panel = bottomActivityPanel else { return }
         let screen = panel.screen ?? ScreenSelector.shared.selectedScreen
         guard let visible = screen?.visibleFrame else { return }
         let clamped = max(4, min(height, 480))
+        let width = bottomActivityStripWidth
         let frame = NSRect(
-            x: visible.origin.x,
+            x: visible.midX - width / 2,
             y: visible.origin.y,
-            width: visible.width,
+            width: width,
             height: clamped
         )
         if panel.frame != frame {
@@ -193,10 +200,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
 
     private func bottomActivityFrame(for screen: NSScreen) -> NSRect {
         let visibleFrame = screen.visibleFrame
+        let width = bottomActivityStripWidth
         return NSRect(
-            x: visibleFrame.origin.x,
+            x: visibleFrame.midX - width / 2,
             y: visibleFrame.origin.y,
-            width: visibleFrame.width,
+            width: width,
             height: bottomActivityHeight
         )
     }
