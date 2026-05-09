@@ -95,14 +95,10 @@ struct BottomActivityView: View {
                 } else if !sessions.isEmpty {
                     let multiSession = sessions.count >= 2
                     expandedStack(sessions: sessions)
-                        .scaleEffect(multiSession ? (isHovering ? 1.0 : 0.92) : 1.0, anchor: .bottom)
                         .transition(multiSession
                             ? .asymmetric(
-                                insertion: .move(edge: .bottom)
-                                    .combined(with: .opacity)
-                                    .combined(with: .scale(scale: 0.92, anchor: .bottom)),
-                                removal: .move(edge: .bottom)
-                                    .combined(with: .opacity)
+                                insertion: .move(edge: .bottom).combined(with: .opacity),
+                                removal: .move(edge: .bottom).combined(with: .opacity)
                               )
                             : .identity)
                 }
