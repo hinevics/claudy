@@ -24,15 +24,21 @@ final class BottomEdgeHoverMonitor: ObservableObject {
     /// that rectangle — so the trigger area is always exactly what the user
     /// can see, regardless of where the panel sits or how tall it is.
     private var resolvePanelFrame: (() -> NSRect?)?
+
+    /// Fired on every mouse move so the host can reposition the panel if
+    /// the screen's visibleFrame shifted (e.g., auto-hide Dock revealed).
+    private var onTick: (() -> Void)?
     private var globalMonitor: Any?
     private var localMonitor: Any?
     private var collapseTask: Task<Void, Never>?
     private var isStarted = false
 
-    func start(resolvePanelFrame: @escaping () -> NSRect?) {
+    func start(resolvePanelFrame: @escaping () -> NSRect?,
+               onTick: (() -> Void)? = nil) {
         guard !isStarted else { return }
         isStarted = true
         self.resolvePanelFrame = resolvePanelFrame
+        self.onTick = onTick
 
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { [weak self] _ in
             // Global monitors deliver events on the main thread already, but
@@ -64,6 +70,7 @@ final class BottomEdgeHoverMonitor: ObservableObject {
         collapseTask?.cancel()
         collapseTask = nil
         resolvePanelFrame = nil
+        onTick = nil
         isStarted = false
     }
 
@@ -77,6 +84,7 @@ final class BottomEdgeHoverMonitor: ObservableObject {
     }
 
     private func evaluate() {
+        onTick?()
         guard let frame = resolvePanelFrame?() else { return }
         let location = NSEvent.mouseLocation
 

@@ -169,9 +169,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
         coordinator.start()
         self.bottomActivityVisibilityCoordinator = coordinator
 
-        hoverMonitor.start { [weak self] in
-            self?.bottomActivityPanel?.frame
-        }
+        hoverMonitor.start(
+            resolvePanelFrame: { [weak self] in
+                self?.bottomActivityPanel?.frame
+            },
+            onTick: { [weak self] in
+                // Re-read screen.visibleFrame each tick so the panel follows
+                // changes like auto-hide Dock reveal/hide without sitting on
+                // top of the Dock.
+                guard let self, let panel = self.bottomActivityPanel else { return }
+                self.resizeBottomActivityPanel(toHeight: panel.frame.height)
+            }
+        )
         self.bottomEdgeHoverMonitor = hoverMonitor
     }
 
