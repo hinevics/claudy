@@ -80,7 +80,16 @@ final class BottomEdgeHoverMonitor: ObservableObject {
         guard let frame = resolvePanelFrame?() else { return }
         let location = NSEvent.mouseLocation
 
-        let shouldHover = frame.contains(location)
+        // Hysteresis: while already hovering, count a slightly larger area
+        // as "still hovering" so micro-movements near the panel edges don't
+        // collapse the panel (which then makes the cursor "outside" again,
+        // toggling state in a tight loop and visually jittering).
+        let stickyPadding: CGFloat = 24
+        let effectiveFrame = isHovering
+            ? frame.insetBy(dx: -stickyPadding, dy: -stickyPadding)
+            : frame
+
+        let shouldHover = effectiveFrame.contains(location)
 
         if shouldHover {
             collapseTask?.cancel()
