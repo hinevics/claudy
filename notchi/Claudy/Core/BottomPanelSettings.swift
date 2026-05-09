@@ -17,11 +17,13 @@ enum BottomPanelSessionFilter: String, CaseIterable, Identifiable {
 }
 
 enum BottomPanelSettingsKeys {
+    static let enabled = "bottomPanel.enabled"
     static let sessionFilter = "bottomPanel.sessionFilter"
     static let rowLimit = "bottomPanel.rowLimit"
     static let opacity = "bottomPanel.opacity"
     static let hideOnFullScreen = "bottomPanel.hideOnFullScreen"
 
+    static let defaultEnabled: Bool = true
     static let defaultRowLimit: Int = 5
     static let defaultOpacity: Double = 1.0
     static let defaultHideOnFullScreen: Bool = true

@@ -873,6 +873,9 @@ private struct EmotionAnalysisSettingsView: View {
 }
 
 private struct BottomPanelSettingsView: View {
+    @AppStorage(BottomPanelSettingsKeys.enabled)
+    private var enabled: Bool = BottomPanelSettingsKeys.defaultEnabled
+
     @AppStorage(BottomPanelSettingsKeys.sessionFilter)
     private var sessionFilterRaw: String = BottomPanelSettingsKeys.defaultSessionFilter.rawValue
 
@@ -894,13 +897,34 @@ private struct BottomPanelSettingsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: SettingsLayout.sectionSpacing) {
             descriptionSection
-            filterSection
-            rowLimitSection
-            opacitySection
-            hideOnFullScreenSection
+            enabledSection
+            VStack(alignment: .leading, spacing: SettingsLayout.sectionSpacing) {
+                filterSection
+                rowLimitSection
+                opacitySection
+                hideOnFullScreenSection
+            }
+            .disabled(!enabled)
+            .opacity(enabled ? 1.0 : 0.4)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .animation(.spring(response: 0.3), value: isFilterPickerExpanded)
+        .animation(.easeInOut(duration: 0.18), value: enabled)
+    }
+
+    private var enabledSection: some View {
+        Toggle(isOn: $enabled) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Show Bottom Panel")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(TerminalColors.primaryText)
+                Text("When off, the activity strip never appears.")
+                    .font(.system(size: 11))
+                    .foregroundColor(TerminalColors.secondaryText)
+            }
+        }
+        .toggleStyle(.switch)
+        .tint(TerminalColors.green)
     }
 
     private var descriptionSection: some View {

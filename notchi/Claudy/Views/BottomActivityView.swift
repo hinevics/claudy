@@ -16,6 +16,9 @@ struct BottomActivityView: View {
     /// blocking events for apps below.
     var onContentHeightChange: ((CGFloat) -> Void)? = nil
 
+    @AppStorage(BottomPanelSettingsKeys.enabled)
+    private var enabled: Bool = BottomPanelSettingsKeys.defaultEnabled
+
     @AppStorage(BottomPanelSettingsKeys.sessionFilter)
     private var sessionFilterRaw: String = BottomPanelSettingsKeys.defaultSessionFilter.rawValue
 
@@ -44,6 +47,7 @@ struct BottomActivityView: View {
     /// All sessions eligible for the bottom panel, respecting sessionFilter but NOT capped by rowLimit.
     /// rowLimit is applied only to the expanded per-session list, not to the aggregate count.
     private var eligibleSessions: [SessionData] {
+        guard enabled else { return [] }
         guard sessionFilter != .none else { return [] }
         let candidates = sessionStore.sortedSessions.filter(Self.isStripEligible)
         switch sessionFilter {
