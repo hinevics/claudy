@@ -43,6 +43,15 @@ final class SessionData: Identifiable {
     private(set) var codexTranscriptPath: String?
     private(set) var codexArchived: Bool = false
     private(set) var codexCompactionSignal: CodexCompactionSignal?
+    private(set) var subagents: [Subagent] = []
+
+    var activeSubagents: [Subagent] {
+        subagents.filter { $0.isActive }
+    }
+
+    var activeSubagentCount: Int {
+        activeSubagents.count
+    }
 
     private var durationTimer: Task<Void, Never>?
     private var sleepTimer: Task<Void, Never>?
@@ -334,6 +343,39 @@ final class SessionData: Identifiable {
             trimEvents()
         }
         lastActivity = Date()
+    }
+
+    func recordSubagentStart(toolUseId: String?, toolInput: [String: Any]?) {
+        let description = (toolInput?["description"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? "Subagent"
+        let subagentType = (toolInput?["subagent_type"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let identifier = toolUseId ?? UUID().uuidString
+        let subagent = Subagent(
+            id: identifier,
+            toolUseId: toolUseId,
+            description: description.isEmpty ? "Subagent" : description,
+            subagentType: subagentType?.isEmpty == false ? subagentType : nil,
+            startedAt: Date(),
+            endedAt: nil
+        )
+        subagents.append(subagent)
+        lastActivity = Date()
+    }
+
+    func recordSubagentEnd(toolUseId: String?) {
+        guard let toolUseId else {
+            // Fallback: end the oldest still-active subagent.
+            if let index = subagents.firstIndex(where: { $0.isActive }) {
+                subagents[index].endedAt = Date()
+                lastActivity = Date()
+            }
+            return
+        }
+        if let index = subagents.firstIndex(where: { $0.toolUseId == toolUseId && $0.isActive }) {
+            subagents[index].endedAt = Date()
+            lastActivity = Date()
+        }
     }
 
     func recordAssistantMessages(_ messages: [AssistantMessage]) {

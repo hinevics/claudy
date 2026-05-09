@@ -125,6 +125,9 @@ final class SessionStore {
                 session.updateTask(.waiting)
                 session.setPendingQuestions(Self.parseQuestions(from: event.toolInput))
             } else {
+                if event.tool == "Task" {
+                    session.recordSubagentStart(toolUseId: event.toolUseId, toolInput: toolInput)
+                }
                 session.clearPendingQuestions()
                 session.updateTask(.working)
             }
@@ -137,6 +140,11 @@ final class SessionStore {
         case .postToolUse:
             let success = event.status != "error"
             session.recordPostToolUse(tool: event.tool, toolUseId: event.toolUseId, success: success)
+            // PostToolUse with tool=="Task" is the canonical end signal — it carries tool_use_id.
+            // SubagentStop is session-level (no tool_use_id) so we keep it as a session task signal only.
+            if event.tool == "Task" {
+                session.recordSubagentEnd(toolUseId: event.toolUseId)
+            }
             session.clearPendingQuestions()
             session.updateTask(.working)
 

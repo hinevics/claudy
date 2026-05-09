@@ -13,16 +13,23 @@ struct SessionRowView: View {
 
     var body: some View {
         Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 10) {
                 stateIndicator
                     .frame(width: 5, height: 5)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(TerminalColors.primaryText)
-                        .lineLimit(1)
-                        .layoutPriority(1)
+                    HStack(spacing: 6) {
+                        Text(title)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(TerminalColors.primaryText)
+                            .lineLimit(1)
+                            .layoutPriority(1)
+
+                        if session.activeSubagentCount > 0 {
+                            SubagentCountBadge(count: session.activeSubagentCount)
+                        }
+                    }
 
                     if let preview = session.activityPreview {
                         Text(preview)
@@ -43,6 +50,13 @@ struct SessionRowView: View {
                 }
                 .buttonStyle(.plain)
                 .onHover { isTrashHovered = $0 }
+            }
+
+            let activeSubs = session.activeSubagents
+            if !activeSubs.isEmpty {
+                SubagentListView(subagents: activeSubs)
+                    .padding(.leading, 15)
+            }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 8)

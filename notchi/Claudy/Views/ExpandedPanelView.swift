@@ -534,6 +534,10 @@ struct ExpandedPanelView: View {
                                 font: .system(size: 11, weight: .medium),
                                 color: TerminalColors.secondaryText
                             )
+
+                            if session.activeSubagentCount > 0 {
+                                SubagentCountBadge(count: session.activeSubagentCount)
+                            }
                         }
 
                         Spacer()

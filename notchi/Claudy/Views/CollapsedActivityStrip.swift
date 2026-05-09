@@ -82,6 +82,13 @@ struct CollapsedActivityStrip: View {
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
+                if session.activeSubagentCount > 0 {
+                    Text("·")
+                        .foregroundColor(.white.opacity(0.4))
+                    Text("+\(session.activeSubagentCount) subs")
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.75))
+                }
                 Spacer(minLength: 6)
                 Text(elapsedLabel)
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
