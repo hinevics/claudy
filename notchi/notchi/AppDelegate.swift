@@ -8,7 +8,9 @@ private let logger = Logger(subsystem: "com.ruban.notchi", category: "AppDelegat
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     private var notchPanel: NotchPanel?
+    private var bottomActivityPanel: BottomActivityPanel?
     private let windowHeight: CGFloat = 500
+    private let bottomActivityHeight: CGFloat = 80
     private let integrationCoordinator = IntegrationCoordinator.shared
 
     private var updaterStarted = false
@@ -41,6 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
         NSApplication.shared.setActivationPolicy(.accessory)
         integrationCoordinator.prepareForLaunch()
         setupNotchWindow()
+        setupBottomActivityWindow()
         observeScreenChanges()
         observeWakeNotifications()
         startHookServices()
@@ -117,7 +120,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
 
             NotchPanelManager.shared.updateGeometry(for: screen)
             panel.setFrame(windowFrame(for: screen), display: true)
+            bottomActivityPanel?.setFrame(bottomActivityFrame(for: screen), display: true)
         }
+    }
+
+    @MainActor private func setupBottomActivityWindow() {
+        guard let screen = ScreenSelector.shared.selectedScreen else { return }
+        let panel = BottomActivityPanel(frame: bottomActivityFrame(for: screen))
+        let hosting = NSHostingView(rootView: BottomActivityView())
+        hosting.translatesAutoresizingMaskIntoConstraints = false
+
+        let container = NSView()
+        container.addSubview(hosting)
+        NSLayoutConstraint.activate([
+            hosting.topAnchor.constraint(equalTo: container.topAnchor),
+            hosting.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            hosting.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            hosting.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+        ])
+
+        panel.contentView = container
+        panel.orderFrontRegardless()
+        self.bottomActivityPanel = panel
+    }
+
+    private func bottomActivityFrame(for screen: NSScreen) -> NSRect {
+        let visibleFrame = screen.visibleFrame
+        return NSRect(
+            x: visibleFrame.origin.x,
+            y: visibleFrame.origin.y,
+            width: visibleFrame.width,
+            height: bottomActivityHeight
+        )
     }
 
     @objc private func handleSystemWake() {

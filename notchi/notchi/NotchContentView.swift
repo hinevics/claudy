@@ -200,7 +200,45 @@ struct NotchContentView: View {
         return isActivityCollapsed ? collapsedHeight : fullHeight
     }
 
+    private var showCollapsedStrip: Bool {
+        guard !isExpanded else { return false }
+        guard let activeSession else { return false }
+        switch activeSession.task {
+        case .working, .compacting, .waiting: return true
+        case .idle, .sleeping:                return false
+        }
+    }
+
     var body: some View {
+        VStack(spacing: 4) {
+            notchVisual
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .animation(panelAnimation, value: isExpanded)
+        .animation(.easeInOut(duration: 0.18), value: collapsedMode)
+        .animation(collapsedHoverAnimation, value: panelManager.isCollapsedHovered)
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showCollapsedStrip)
+        .onAppear(perform: startLaunchGlow)
+        .onReceive(NotificationCenter.default.publisher(for: .notchiShouldCollapse)) { _ in
+            panelManager.collapse()
+        }
+        .onChange(of: isExpanded) { _, expanded in
+            startSpriteHandoff(for: expanded)
+            if !expanded {
+                showingPanelSettings = false
+                showingPanelSettingsDetail = false
+                showingSessionActivity = false
+                hoveredSessionId = nil
+            }
+        }
+        .onChange(of: sessionStore.activeSessionCount) { _, count in
+            if count < 2 {
+                showingSessionActivity = false
+            }
+        }
+    }
+
+    private var notchVisual: some View {
         VStack(spacing: 0) {
             notchLayout
         }
@@ -278,28 +316,6 @@ struct NotchContentView: View {
                 : (panelManager.isCollapsedHovered ? .black.opacity(0.3) : .clear),
             radius: 6
         )
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .animation(panelAnimation, value: isExpanded)
-        .animation(.easeInOut(duration: 0.18), value: collapsedMode)
-        .animation(collapsedHoverAnimation, value: panelManager.isCollapsedHovered)
-        .onAppear(perform: startLaunchGlow)
-        .onReceive(NotificationCenter.default.publisher(for: .notchiShouldCollapse)) { _ in
-            panelManager.collapse()
-        }
-        .onChange(of: isExpanded) { _, expanded in
-            startSpriteHandoff(for: expanded)
-            if !expanded {
-                showingPanelSettings = false
-                showingPanelSettingsDetail = false
-                showingSessionActivity = false
-                hoveredSessionId = nil
-            }
-        }
-        .onChange(of: sessionStore.activeSessionCount) { _, count in
-            if count < 2 {
-                showingSessionActivity = false
-            }
-        }
     }
 
     @ViewBuilder
