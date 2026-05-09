@@ -47,6 +47,16 @@ struct PanelSettingsView: View {
         _showingEmotionAnalysisSettings = showingEmotionAnalysisSettings
     }
 
+    // Which sub-detail (if any) is currently being rendered. The parent's
+    // `showingEmotionAnalysisSettings` binding doubles as "any detail showing"
+    // so the expanded panel knows to render the back-affordance.
+    private enum DetailRoute {
+        case emotionAnalysis
+        case bottomPanel
+    }
+
+    @State private var detailRoute: DetailRoute = .emotionAnalysis
+
     var body: some View {
         ZStack {
             if !showingEmotionAnalysisSettings {
@@ -58,11 +68,18 @@ struct PanelSettingsView: View {
             }
 
             if showingEmotionAnalysisSettings {
-                EmotionAnalysisSettingsView()
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+                Group {
+                    switch detailRoute {
+                    case .emotionAnalysis:
+                        EmotionAnalysisSettingsView()
+                    case .bottomPanel:
+                        BottomPanelSettingsView()
+                    }
+                }
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .trailing).combined(with: .opacity)
+                ))
             }
         }
         .animation(.easeInOut(duration: 0.2), value: showingEmotionAnalysisSettings)
@@ -110,7 +127,23 @@ struct PanelSettingsView: View {
                 }
             }
             .buttonStyle(.plain)
+
+            bottomPanelRow
         }
+    }
+
+    private var bottomPanelRow: some View {
+        Button(action: {
+            detailRoute = .bottomPanel
+            showingEmotionAnalysisSettings = true
+        }) {
+            SettingsRowView(icon: "rectangle.bottomthird.inset.filled", title: "Bottom Panel") {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundColor(TerminalColors.dimmedText)
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     private var aiSection: some View {
@@ -150,7 +183,10 @@ struct PanelSettingsView: View {
     }
 
     private var emotionAnalysisRow: some View {
-        Button(action: { showingEmotionAnalysisSettings = true }) {
+        Button(action: {
+            detailRoute = .emotionAnalysis
+            showingEmotionAnalysisSettings = true
+        }) {
             SettingsRowView(icon: "brain", title: "Emotion Analysis") {
                 HStack(spacing: 6) {
                     let status = emotionAnalysisStatus()
@@ -833,6 +869,152 @@ private struct EmotionAnalysisSettingsView: View {
             .background(color.opacity(0.15))
             .cornerRadius(4)
             .frame(maxWidth: 160, alignment: .trailing)
+    }
+}
+
+private struct BottomPanelSettingsView: View {
+    @AppStorage(BottomPanelSettingsKeys.sessionFilter)
+    private var sessionFilterRaw: String = BottomPanelSettingsKeys.defaultSessionFilter.rawValue
+
+    @AppStorage(BottomPanelSettingsKeys.rowLimit)
+    private var rowLimit: Int = BottomPanelSettingsKeys.defaultRowLimit
+
+    @AppStorage(BottomPanelSettingsKeys.opacity)
+    private var opacity: Double = BottomPanelSettingsKeys.defaultOpacity
+
+    @AppStorage(BottomPanelSettingsKeys.hideOnFullScreen)
+    private var hideOnFullScreen: Bool = BottomPanelSettingsKeys.defaultHideOnFullScreen
+
+    @State private var isFilterPickerExpanded = false
+
+    private var sessionFilter: BottomPanelSessionFilter {
+        BottomPanelSessionFilter(rawValue: sessionFilterRaw) ?? BottomPanelSettingsKeys.defaultSessionFilter
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: SettingsLayout.sectionSpacing) {
+            descriptionSection
+            filterSection
+            rowLimitSection
+            opacitySection
+            hideOnFullScreenSection
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .animation(.spring(response: 0.3), value: isFilterPickerExpanded)
+    }
+
+    private var descriptionSection: some View {
+        Text("Controls the activity strip pinned to the bottom of the screen.")
+            .font(.system(size: 11))
+            .foregroundColor(TerminalColors.secondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var filterSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button(action: { isFilterPickerExpanded.toggle() }) {
+                SettingsRowView(icon: "line.3.horizontal.decrease.circle", title: "Show Sessions") {
+                    HStack(spacing: 4) {
+                        Text(sessionFilter.displayName)
+                            .font(.system(size: 11))
+                            .foregroundColor(TerminalColors.secondaryText)
+                        Image(systemName: isFilterPickerExpanded ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 9))
+                            .foregroundColor(TerminalColors.dimmedText)
+                    }
+                }
+            }
+            .buttonStyle(.plain)
+
+            if isFilterPickerExpanded {
+                filterPicker
+            }
+        }
+    }
+
+    private var filterPicker: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(BottomPanelSessionFilter.allCases) { option in
+                filterRow(option)
+            }
+        }
+        .padding(.vertical, SettingsLayout.pickerInset)
+        .background(TerminalColors.subtleBackground)
+        .cornerRadius(8)
+        .padding(.top, SettingsLayout.pickerInset)
+    }
+
+    private func filterRow(_ option: BottomPanelSessionFilter) -> some View {
+        Button(action: {
+            sessionFilterRaw = option.rawValue
+            isFilterPickerExpanded = false
+        }) {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(sessionFilter == option ? TerminalColors.green : Color.clear)
+                    .frame(width: 6, height: 6)
+
+                Text(option.displayName)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(sessionFilter == option ? TerminalColors.primaryText : TerminalColors.secondaryText)
+                    .lineLimit(1)
+
+                Spacer()
+            }
+            .padding(.horizontal, SettingsLayout.pickerOptionHorizontalPadding)
+            .padding(.vertical, SettingsLayout.pickerOptionVerticalPadding)
+            .background(sessionFilter == option ? TerminalColors.hoverBackground : Color.clear)
+            .cornerRadius(4)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var rowLimitSection: some View {
+        SettingsRowView(icon: "list.number", title: "Row Limit") {
+            HStack(spacing: 8) {
+                Slider(
+                    value: Binding(
+                        get: { Double(rowLimit) },
+                        set: { rowLimit = Int($0.rounded()) }
+                    ),
+                    in: Double(BottomPanelSettingsKeys.rowLimitRange.lowerBound)...Double(BottomPanelSettingsKeys.rowLimitRange.upperBound),
+                    step: 1
+                )
+                .frame(width: 140)
+
+                Text("\(rowLimit)")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(TerminalColors.secondaryText)
+                    .frame(width: 24, alignment: .trailing)
+            }
+        }
+    }
+
+    private var opacitySection: some View {
+        SettingsRowView(icon: "circle.lefthalf.filled", title: "Opacity") {
+            HStack(spacing: 8) {
+                Slider(
+                    value: $opacity,
+                    in: BottomPanelSettingsKeys.opacityRange
+                )
+                .frame(width: 140)
+
+                Text("\(Int((opacity * 100).rounded()))%")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundColor(TerminalColors.secondaryText)
+                    .frame(width: 36, alignment: .trailing)
+            }
+        }
+    }
+
+    private var hideOnFullScreenSection: some View {
+        Button(action: { hideOnFullScreen.toggle() }) {
+            SettingsRowView(icon: "arrow.up.left.and.arrow.down.right", title: "Hide on Full Screen") {
+                ToggleSwitch(isOn: hideOnFullScreen)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

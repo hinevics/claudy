@@ -1,33 +1,64 @@
 import SwiftUI
 
-/// Hosted in BottomActivityPanel — shows the collapsed activity strip pinned to the
-/// bottom-center of the screen whenever there's an active Claude/Codex session running.
+/// Hosted in BottomActivityPanel — shows collapsed activity strips pinned to the
+/// bottom-center of the screen for running Claude/Codex sessions.
 struct BottomActivityView: View {
     var stateMachine: NotchiStateMachine = .shared
+
+    @AppStorage(BottomPanelSettingsKeys.sessionFilter)
+    private var sessionFilterRaw: String = BottomPanelSettingsKeys.defaultSessionFilter.rawValue
+
+    @AppStorage(BottomPanelSettingsKeys.rowLimit)
+    private var rowLimit: Int = BottomPanelSettingsKeys.defaultRowLimit
+
+    @AppStorage(BottomPanelSettingsKeys.opacity)
+    private var opacity: Double = BottomPanelSettingsKeys.defaultOpacity
+
+    private var sessionFilter: BottomPanelSessionFilter {
+        BottomPanelSessionFilter(rawValue: sessionFilterRaw) ?? BottomPanelSettingsKeys.defaultSessionFilter
+    }
 
     private var sessionStore: SessionStore {
         stateMachine.sessionStore
     }
 
-    private var activeSession: SessionData? {
-        sessionStore.effectiveSession
+    private var visibleSessions: [SessionData] {
+        guard sessionFilter != .none else { return [] }
+        let candidates = sessionStore.sortedSessions.filter(Self.isStripEligible)
+        let filtered: [SessionData]
+        switch sessionFilter {
+        case .none:
+            filtered = []
+        case .activeOnly:
+            filtered = candidates.filter { Self.isActive($0) }
+        case .all:
+            filtered = candidates
+        }
+        let cap = max(BottomPanelSettingsKeys.rowLimitRange.lowerBound,
+                      min(rowLimit, BottomPanelSettingsKeys.rowLimitRange.upperBound))
+        return Array(filtered.prefix(cap))
     }
 
-    private var shouldShow: Bool {
-        guard let activeSession else { return false }
-        switch activeSession.task {
+    private static func isStripEligible(_ session: SessionData) -> Bool {
+        switch session.task {
+        case .working, .compacting, .waiting: return true
+        case .idle, .sleeping:                return false
+        }
+    }
+
+    private static func isActive(_ session: SessionData) -> Bool {
+        switch session.task {
         case .working, .compacting, .waiting: return true
         case .idle, .sleeping:                return false
         }
     }
 
     var body: some View {
-        VStack {
+        VStack(spacing: 6) {
             Spacer()
-            if shouldShow, let activeSession {
-                CollapsedActivityStrip(session: activeSession)
+            ForEach(visibleSessions, id: \.id) { session in
+                CollapsedActivityStrip(session: session)
                     .frame(width: 360)
-                    .padding(.bottom, 18)
                     .transition(
                         .asymmetric(
                             insertion: .move(edge: .bottom).combined(with: .opacity),
@@ -35,8 +66,12 @@ struct BottomActivityView: View {
                         )
                     )
             }
+            if !visibleSessions.isEmpty {
+                Spacer().frame(height: 12)
+            }
         }
+        .opacity(opacity)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: shouldShow)
+        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: visibleSessions.map(\.id))
     }
 }

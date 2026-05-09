@@ -9,6 +9,7 @@ private let logger = Logger(subsystem: "com.ruban.notchi", category: "AppDelegat
 final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     private var notchPanel: NotchPanel?
     private var bottomActivityPanel: BottomActivityPanel?
+    private var bottomActivityVisibilityCoordinator: BottomActivityVisibilityCoordinator?
     private let windowHeight: CGFloat = 500
     private let bottomActivityHeight: CGFloat = 80
     private let integrationCoordinator = IntegrationCoordinator.shared
@@ -142,6 +143,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, SPUUpdaterDelegate, SP
         panel.contentView = container
         panel.orderFrontRegardless()
         self.bottomActivityPanel = panel
+
+        let coordinator = BottomActivityVisibilityCoordinator(panel: panel) { [weak self] in
+            self?.bottomActivityPanel?.screen ?? ScreenSelector.shared.selectedScreen
+        }
+        coordinator.start()
+        self.bottomActivityVisibilityCoordinator = coordinator
     }
 
     private func bottomActivityFrame(for screen: NSScreen) -> NSRect {
